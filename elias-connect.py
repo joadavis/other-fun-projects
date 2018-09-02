@@ -40,7 +40,7 @@ class GameBoard(object):
         # TODO: antigravity
         # TODO: bombs
         if (self.board[col][0] != 0):
-            raise(Exception("no space!"))
+            raise(Exception(f"no space in column {col}!"))
         for rown in range(1, self.num_rows):
             if self.board[col][rown] != 0:
                 self.board[col][rown - 1] = chip
@@ -81,26 +81,29 @@ class GameBoard(object):
                 else:
                     last_seen = self.board[coln][rown]
                     last_seen_count = 1            
-        return(None)
+        
         # from left top
         # reduce the search cycles, but each stop check all 4 cells
         for coln in range(self.num_columns - 3):
             for rown in range(self.num_rows - 3):
-                cell = board[coln][rown]
+                cell = self.board[coln][rown]
                 if cell != 0:
-                    if cell == board[coln + 1][rown + 1] and \
-                       cell == board[coln + 2][rown + 2] and \
-                       cell == board[coln + 3][rown + 3]:
+                    if cell == self.board[coln + 1][rown + 1] and \
+                       cell == self.board[coln + 2][rown + 2] and \
+                       cell == self.board[coln + 3][rown + 3]:
                            return(f"Player {cell} wins!!")
         # other diag
         for coln in range(3, self.num_columns):
             for rown in range(self.num_rows - 3):
-                cell = board[coln][rown]
+                cell = self.board[coln][rown]
                 if cell != 0:
-                    if cell == board[coln - 1][rown + 1] and \
-                       cell == board[coln - 2][rown + 2] and \
-                       cell == board[coln - 3][rown + 3]:
+                    print(f"..checking {coln}{rown} {self.board[coln][rown]} {self.board[coln-1][rown+1]} {self.board[coln - 2][rown + 2]} {self.board[coln - 3][rown + 3]}") 
+                    if cell == self.board[coln - 1][rown + 1] and \
+                       cell == self.board[coln - 2][rown + 2] and \
+                       cell == self.board[coln - 3][rown + 3]:
                            return(f"Player {cell} wins!!")
+        # no winner
+        return(None)
 
     def list_open_columns(self):
         """ return a list of column number that are ok """
@@ -112,6 +115,7 @@ class GameBoard(object):
         return(open_columns)
 
 
+# TODO remove test cases from this module to their own driver script
 def test_case_1():
     gb = GameBoard()
     gb.display()
@@ -133,10 +137,75 @@ def test_case_1():
     gb.drop_in(3, 1)
     gb.drop_in(3, 1)
 
+def test_case_diag_corners():
+    test_case_diag_lbu()
+    test_case_diag_ltd()
 
-def game_loop():
+def test_case_diag_lbu():
+    gb = GameBoard()
+    # bottom left up
+    gb.drop_in(0, 1)
+    gb.drop_in(1, 2)
+    gb.drop_in(2, 2)
+    gb.drop_in(3, 2)
+    gb.drop_in(1, 1)
+    gb.drop_in(2, 2)
+    gb.drop_in(3, 2)
+    gb.drop_in(2, 1)
+    gb.drop_in(3, 2)
+    gb.display()
+    checked = gb.check_for_winner()
+    if checked != None:
+        print("Test failed, should not have a winner yet!")
+    gb.drop_in(3, 1)
+    gb.display()
+    checked = gb.check_for_winner()
+    if checked != None:
+        print(checked)
+    else:
+        print("Test failed! should have found a winner")
+
+def test_case_diag_ltd():
+    gb = GameBoard()
+    # top left down
+    gb.drop_in(0, 1)
+    gb.drop_in(0, 1)
+    gb.drop_in(0, 2) # break
+    gb.drop_in(0, 1)
+    gb.drop_in(0, 1)
+    gb.drop_in(0, 2)
+    
+    gb.drop_in(1, 2)
+    gb.drop_in(1, 2) # break
+    gb.drop_in(1, 1)
+    gb.drop_in(1, 1)
+    gb.drop_in(1, 2)
+    
+    gb.drop_in(2, 1)
+    gb.drop_in(2, 2) # break
+    gb.drop_in(2, 1)
+    gb.drop_in(2, 2)
+
+    gb.drop_in(3, 1) # break
+    gb.drop_in(3, 2)
+    gb.display()
+    checked = gb.check_for_winner()
+    if checked != None:
+        print("Test failed, should not have a winner yet!")
+    gb.drop_in(3, 2)
+    gb.display()
+    checked = gb.check_for_winner()
+    if checked != None:
+        print(checked)
+    else:
+        print("Test failed! should have found a winner")
+
+
+def game_loop(shields=False):
     gb = GameBoard()
     noone_has_won = True
+    # TODO get user names?
+    
     while noone_has_won:
         # TODO show valid columns
         gb.display()
@@ -147,4 +216,19 @@ def game_loop():
 
 
 if __name__ == '__main__':
-    test_case_1()
+
+    print("Welcome to Elias' Connect Game")
+    act = input("Do you want to play with or without powerups?")
+
+    if act.startswith("t"):
+        test_case_diag_corners()
+        print(":)")
+        # this will throw an exception for no space
+        test_case_1()
+        
+    elif act.startswith("without") or act.startswith("n"):
+        game_loop()
+    else:
+        # TODO which ones?
+        game_loop()
+        
