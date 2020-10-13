@@ -4,6 +4,8 @@ Other Python programming projects, such as The Worst 3D Printer and kivy program
 A few of my old projects to collect here:
 
 * The Worst 3D Printer Ever
+  * v1 is contained here
+  * v2 is not yet functional but needs to be committed
 * Various Kivy projects (originated in QPython on Android, but work elsewhere) - Missing
   * AttendanceCounter
   * RollAndTell
