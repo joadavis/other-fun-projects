@@ -1,17 +1,21 @@
 # /bin/python3
 
-# a connecting game for Elias
+# a connecting game for Elias, a 5 year old who loves games
 # based on his crazy ideas for power ups
+# started June 2018
+
+# See helptext for game design detail
+
 
 class GameBoard(object):
-    num_rows = 6;
-    num_columns = 7;
-    gravity = True;
-    wraparound = False;
+    num_rows = 6
+    num_columns = 7
+    gravity = True
+    wraparound = False
 
-    powerup_shield = False;
-    powerup_X = False;
-    powerup_bombs = False;
+    powerup_shield = False
+    powerup_X = False
+    powerup_bombs = False
 
     board = []
 
@@ -20,6 +24,17 @@ class GameBoard(object):
         # things get dropped from the top, right? so select a column and drop
         self.board = [[0 for cell in range(self.num_rows)] for col in range(self.num_columns)]
 
+    help_text = """
+    This is basically a 4 in a row connection game with power ups designed by a grade school kid
+    The game is a basic 7 columns and 6 rows grid where pieces are dropped one by one from the top.
+    Players take turns selecting an available column to drop in a piece of their color.
+    However, there are power ups taht can be enabled to make the game more chaotic.
+    - Bombs can be dropped instead of a piece and will destroy pieces from a small area.
+    - Shields can be placed over a column to block more pieces being dropped for a number of turns.
+    - A shock can be dropped in a column so when the opponent drops a piece they get shocked.  3 shocks and a player loses a turn.
+    - Anti gravity - all the columns shift up in the grid, and play continues where pieces are inserted from the bottom.
+    There may be future enhancements to add random powerups and pickups.
+    """
 
     def display(self):
         header = ""
@@ -60,7 +75,7 @@ class GameBoard(object):
                 elif self.board[coln][rown] == last_seen:
                     last_seen_count += 1
                     if last_seen_count == 4:
-                        # todo try an f string
+                        # Formatting a winning message
                         return(f"Player {last_seen} wins!")
                 else:
                     last_seen = self.board[coln][rown]
@@ -76,7 +91,7 @@ class GameBoard(object):
                 elif self.board[coln][rown] == last_seen:
                     last_seen_count += 1
                     if last_seen_count == 4:
-                        # todo try an f string
+                        # Formatting a winning message
                         return(f"Player {last_seen} wins!")
                 else:
                     last_seen = self.board[coln][rown]
@@ -117,6 +132,9 @@ class GameBoard(object):
 
 # TODO remove test cases from this module to their own driver script
 def test_case_1():
+    print()
+    print("Running Test Case 1")
+    print()
     gb = GameBoard()
     gb.display()
     print(gb.list_open_columns())
@@ -142,6 +160,10 @@ def test_case_diag_corners():
     test_case_diag_ltd()
 
 def test_case_diag_lbu():
+    print()
+    print("Running Test Case for winning from the left bottom up")
+    print()
+    
     gb = GameBoard()
     # bottom left up
     gb.drop_in(0, 1)
@@ -166,6 +188,11 @@ def test_case_diag_lbu():
         print("Test failed! should have found a winner")
 
 def test_case_diag_ltd():
+    print()
+    print("Running Test Case for winning from the left top down")
+    print()
+    
+
     gb = GameBoard()
     # top left down
     gb.drop_in(0, 1)
@@ -201,7 +228,42 @@ def test_case_diag_ltd():
         print("Test failed! should have found a winner")
 
 
-def game_loop(shields=False):
+# return action chosen, validated column to drop
+def parse_input(avail_cols):
+    # TODO allow input like "d3"
+    act = input("Do you want to drop a token(d) or use a powerup (p)? ")
+
+    if act == None or act == "":
+        return None, None
+    if act.startswith("d"):
+        # TODO just convert the input to a number and call a function
+        act = input("What column do you choose? ")
+        if act == None or act == "":
+            return None, None
+        if act.isdigit() and int(act) in avail_cols:
+            return "d", int(act)
+
+    # invalid input, try again
+    return None, None
+
+# TODO have a player object to hold powerup counts
+def player_turn(gb, player_number):
+    gb.display()
+    avail_cols = gb.list_open_columns()
+    print(f"  These columns are available {avail_cols}")
+    print(f">> Player {player_number} turn <<")
+    need_input = True
+    while need_input:
+        act, col = parse_input(avail_cols)
+        if act == "d":
+            gb.drop_in(col, player_number)
+            need_input = False
+        # TODO: handle powerups
+        else:
+            print("Invalid input or not implemented yet, please try again.")
+        # if act == None, fall through and loop again
+
+def game_loop(shields=False, bombs=False, shocks=False):
     gb = GameBoard()
     noone_has_won = True
     # TODO get user names?
@@ -209,26 +271,55 @@ def game_loop(shields=False):
     while noone_has_won:
         # TODO show valid columns
         gb.display()
+        avail_cols = gb.list_open_columns()
+        print(f"  These columns are available {avail_cols}")
+        print(f">> Player {1} turn <<")
         # TODO get input for player 1
-        # TODO call drop
+        need_input = True
+        while need_input:
+            act, col = parse_input(avail_cols)
+            if act == "d":
+                gb.drop_in(col, 1)
+                need_input = False
+            # TODO: handle powerups
+            else:
+                print("Invalid input or not implemented yet, please try again.")
+            # if act == None, fall through and loop again
+
         # check for winner
-        # TODO repeat for player 2
+        checked = gb.check_for_winner()
+        if checked != None:
+            print(checked)
+            print("Thanks for playing!")
+            break
+
+        # repeat for player 2
+        player_turn(gb, 2)
+        # check for winner
+        checked = gb.check_for_winner()
+        if checked != None:
+            print(checked)
+            print("Thanks for playing!")
+            break
 
 
 if __name__ == '__main__':
 
     print("Welcome to Elias' Connect Game")
-    act = input("Do you want to play with or without powerups?")
+    act = input("Do you want to play with (y) or without (n) powerups? Or type h for help. ")
 
+    # Secret run tests mode
     if act.startswith("t"):
         test_case_diag_corners()
         print(":)")
         # this will throw an exception for no space
         test_case_1()
-        
+
+    elif act.startswith("h"):
+        print(GameBoard.help_text)
+
     elif act.startswith("without") or act.startswith("n"):
         game_loop()
     else:
         # TODO which ones?
-        game_loop()
-        
+        game_loop(True, True, True)
